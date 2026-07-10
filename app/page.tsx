@@ -1,6 +1,32 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function Home() {
+  const [address, setAddress] = useState("");
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
+      setError("Please enter a valid property address or URL.");
+      return;
+    }
+
+    startTransition(async () => {
+      // Simulate 2-second API call/processing time
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      router.push(`/analysis?address=${encodeURIComponent(trimmedAddress)}`);
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
       {/* Header */}
@@ -44,20 +70,33 @@ export default function Home() {
 
           {/* Search Box Component */}
           <div className="mt-10 max-w-2xl mx-auto">
-            <form className="relative flex p-1.5 rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur shadow-2xl focus-within:border-zinc-700 transition-colors">
+            <form onSubmit={handleSubmit} className="relative flex flex-col sm:flex-row p-1.5 rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur shadow-2xl focus-within:border-zinc-700 transition-colors">
               <input 
                 type="text" 
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                disabled={isPending}
                 placeholder="Enter property address or Zillow URL..." 
-                className="w-full bg-transparent px-4 py-3 text-base text-white placeholder-zinc-500 focus:outline-none"
+                className="w-full bg-transparent px-4 py-3 text-base text-white placeholder-zinc-500 focus:outline-none disabled:opacity-50"
               />
               <button 
                 type="submit" 
-                className="flex items-center justify-center whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200"
+                disabled={isPending}
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200 disabled:bg-zinc-400 disabled:cursor-not-allowed min-w-[160px]"
               >
-                Analyze Property
+                {isPending && (
+                  <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {isPending ? "Analyzing..." : "Analyze Property"}
               </button>
             </form>
-            <p className="mt-3 text-xs text-zinc-500">Try demo addresses: 742 Evergreen Terrace or 221B Baker Street</p>
+            {error && (
+              <p className="mt-2 text-left px-4 text-xs text-red-400 font-medium">{error}</p>
+            )}
+            <p className="mt-3 text-xs text-zinc-500 text-center sm:text-left sm:px-4">Try demo addresses: 742 Evergreen Terrace or 221B Baker Street</p>
           </div>
         </div>
       </section>
