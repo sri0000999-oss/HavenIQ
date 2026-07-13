@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+
 
 export default function Home() {
   const [address, setAddress] = useState("");
@@ -10,7 +10,7 @@ export default function Home() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -21,9 +21,26 @@ export default function Home() {
     }
 
     startTransition(async () => {
-      // Simulate 2-second API call/processing time
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      router.push(`/analysis?address=${encodeURIComponent(trimmedAddress)}`);
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ address: trimmedAddress }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "An error occurred during analysis.");
+          return;
+        }
+
+        router.push(`/analysis?address=${encodeURIComponent(trimmedAddress)}`);
+      } catch (err) {
+        setError("Failed to connect to the server. Please try again.");
+      }
     });
   };
 
