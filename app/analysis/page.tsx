@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MapClientWrapper from "./MapClientWrapper";
+import { calculateUnderwriting } from "@/lib/underwriting";
 
 interface AnalysisPageProps {
   searchParams: Promise<{ address?: string }>;
@@ -64,6 +65,32 @@ const longitude = details.longitude;
   const description =
   details.description ??
   "No property description available.";
+  
+  const aiSummary = `
+This ${bedrooms}-bedroom, ${bathrooms}-bathroom home offers approximately ${sqft.toLocaleString()} square feet of living space and was built in ${yearBuilt}. Located in ${city}, ${state}, the property is currently valued at approximately $${price.toLocaleString()} based on the latest market data. Nearby comparable sales indicate the home is competitively positioned within its neighborhood. Investors should further evaluate rental demand, operating expenses, financing assumptions, and local market trends before acquisition.
+`;
+
+const zestimate = details.zestimate ?? 0;
+
+const rentZestimate = details.rentZestimate ?? 0;
+
+const daysOnZillow = details.daysOnZillow ?? "N/A";
+
+const hoaFee = details.monthlyHoaFee ?? 0;
+
+const propertyTaxRate = details.propertyTaxRate ?? 0;
+
+const pricePerSqft =
+  price && sqft
+    ? Math.round(Number(price) / Number(sqft))
+    : 0;
+
+    const underwriting = calculateUnderwriting({
+  purchasePrice: Number(price),
+  rentEstimate: Number(rentZestimate),
+  propertyTaxRate: Number(propertyTaxRate),
+  monthlyHoa: Number(hoaFee),
+});
 
   const schools =
   details.schools ?? [];
@@ -175,16 +202,72 @@ const longitude = details.longitude;
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">HavenIQ Index</h3>
                 {/* Buy / Wait / Avoid Badge */}
                 <span className="inline-flex items-center rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/20">
-                  BUY
+                  {underwriting.investmentRecommendation}
                 </span>
               </div>
 
               <div className="mt-6 text-center lg:text-left">
                 <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider block">Investment Score</span>
                 <div className="mt-2 flex items-baseline justify-center lg:justify-start gap-1">
-                  <span className="text-6xl font-black text-white tracking-tight">87</span>
+                  <span className="text-6xl font-black text-white tracking-tight">{underwriting.havenIQScore}</span>
                   <span className="text-xl font-medium text-zinc-600">/ 100</span>
                 </div>
+                <div className="mt-5">
+  <span className="text-xs uppercase tracking-wider text-zinc-500">
+    Confidence
+  </span>
+
+  <p className="mt-1 text-sm font-semibold text-emerald-400">
+    High
+  </p>
+</div>
+<div className="mt-6 space-y-4">
+  <div>
+    <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">
+      Investment Strengths
+    </h4>
+
+   <ul className="space-y-2 text-sm text-zinc-300">
+  <li>
+    {underwriting.monthlyCashFlow > 0
+      ? "✓ Positive Monthly Cash Flow"
+      : "• Negative Monthly Cash Flow"}
+  </li>
+
+  <li>
+    {underwriting.capRate >= 5
+      ? "✓ Healthy Cap Rate"
+      : "• Lower Cap Rate"}
+  </li>
+
+  <li>
+    {hoaFee <= 100
+      ? "✓ Low HOA Burden"
+      : "• Higher HOA Burden"}
+  </li>
+</ul>
+  </div>
+
+  <div>
+    <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">
+      Risks
+    </h4>
+
+    <ul className="space-y-2 text-sm text-zinc-400">
+  <li>
+    {propertyTaxRate > 0.02
+      ? "• Higher Property Taxes"
+      : "✓ Favorable Property Tax Rate"}
+  </li>
+
+  <li>
+    {underwriting.expenseRatio > 40
+      ? "• Higher Operating Expenses"
+      : "✓ Efficient Operating Expenses"}
+  </li>
+</ul>
+  </div>
+</div>
               </div>
 
               <p className="mt-4 text-xs leading-5 text-zinc-400">
@@ -209,27 +292,87 @@ const longitude = details.longitude;
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Financial Metrics Section */}
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-6 space-y-6">
+          <div className="lg:col-span-2 rounded-2xl border border-zinc-900 bg-zinc-950 p-6 space-y-6">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 border-b border-zinc-900 pb-3">
-              Financial Vectors
+              Investment Metrics
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
-                <span className="text-xs text-zinc-500 block">Cap Rate</span>
-                <span className="text-xl font-bold text-white mt-1 block">6.4%</span>
-              </div>
+  <span className="text-xs text-zinc-500 block">
+    Cap Rate
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {underwriting.capRate.toFixed(2)}%
+  </span>
+</div>
               <div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
-                <span className="text-xs text-zinc-500 block">Projected IRR</span>
-                <span className="text-xl font-bold text-white mt-1 block">11.8%</span>
-              </div>
+  <span className="text-xs text-zinc-500 block">
+    Property Tax Rate
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {propertyTaxRate
+      ? `${propertyTaxRate}%`
+      : "N/A"}
+  </span>
+</div>
               <div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
-                <span className="text-xs text-zinc-500 block">Gross Rent Multiplier</span>
-                <span className="text-xl font-bold text-white mt-1 block">12.2</span>
-              </div>
-              <div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
-                <span className="text-xs text-zinc-500 block">Mo. Cash Flow</span>
-                <span className="text-xl font-bold text-emerald-400 mt-1 block">+$420</span>
-              </div>
+  <span className="text-xs text-zinc-500 block">
+    Rent Zestimate
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {rentZestimate
+      ? `$${rentZestimate.toLocaleString()}/mo`
+      : "N/A"}
+  </span>
+</div>
+             <div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
+  <span className="text-xs text-zinc-500 block">
+    Monthly HOA
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {hoaFee ? `$${hoaFee.toLocaleString()}` : "None"}
+  </span>
+</div>
+<div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
+  <span className="text-xs text-zinc-500 block">
+    Net Operating Income
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    ${Math.round(underwriting.noi).toLocaleString()}
+  </span>
+</div>
+<div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
+  <span className="text-xs text-zinc-500 block">
+    Monthly Cash Flow
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    ${Math.round(underwriting.monthlyCashFlow).toLocaleString()}
+  </span>
+</div>
+<div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
+  <span className="text-xs text-zinc-500 block">
+    Gross Rent Multiplier
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {underwriting.grossRentMultiplier.toFixed(1)}
+  </span>
+</div>
+<div className="bg-black/40 border border-zinc-900 p-4 rounded-xl">
+  <span className="text-xs text-zinc-500 block">
+    Expense Ratio
+  </span>
+
+  <span className="text-xl font-bold text-white mt-1 block">
+    {underwriting.expenseRatio.toFixed(1)}%
+  </span>
+</div>
             </div>
           </div>
 
@@ -260,7 +403,7 @@ const longitude = details.longitude;
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-zinc-400">Historical Days on Market (Avg)</span>
-                  <span className="font-mono font-semibold text-white">18 Days</span>
+                  <span className="font-mono font-semibold text-white">{daysOnZillow} Days</span>
                 </div>
                 <div className="h-1.5 w-full bg-zinc-900 rounded-full">
                   <div className="h-full w-[35%] bg-white" />
@@ -296,10 +439,13 @@ const longitude = details.longitude;
         <div className="rounded-2xl border border-zinc-900 bg-gradient-to-r from-zinc-950 to-zinc-900/40 p-6">
           <div className="flex items-center gap-2 mb-3">
             <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">HavenIQ AI Executive Summary</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">Investment Thesis</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+  AI-generated investment outlook based on the property's financial and market characteristics.
+</p>
           </div>
           <p className="text-sm leading-6 text-zinc-400">
-            {description}
+            {aiSummary}
           </p>
         </div>
         <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-6">
