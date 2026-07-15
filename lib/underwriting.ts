@@ -19,8 +19,17 @@ export interface UnderwritingResult {
   expenseRatio: number;
   monthlyCashFlow: number;
 
-  investmentRecommendation: string;
-  havenIQScore: number;
+ financialHealthScore: number;
+
+marketScore: number;
+
+propertyQualityScore: number;
+
+riskScore: number;
+
+havenIQScore: number;
+
+investmentRecommendation: string;
 }
 export function calculateUnderwriting(
   input: UnderwritingInput
@@ -85,6 +94,13 @@ else if (grossRentMultiplier <= 15) havenIQScore += 3;
 
 // Keep score between 0 and 100
 havenIQScore = Math.min(havenIQScore, 100);
+const financialHealthScore = havenIQScore;
+
+const marketScore = 20;
+
+const propertyQualityScore = 18;
+
+const riskScore = 12;
 
 const investmentRecommendation =
   havenIQScore >= 85   
@@ -105,7 +121,13 @@ return {
   grossRentMultiplier,
   expenseRatio,
   monthlyCashFlow,
-  investmentRecommendation,
+
+  financialHealthScore,
+marketScore,
+propertyQualityScore,
+riskScore,
   havenIQScore,
+  investmentRecommendation,
+  
 };
 }

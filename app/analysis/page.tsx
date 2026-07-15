@@ -221,6 +221,43 @@ const pricePerSqft =
     High
   </p>
 </div>
+<div className="mt-6 border-t border-zinc-900 pt-5">
+  <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
+    Score Breakdown
+  </h4>
+
+  <div className="space-y-3">
+
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Financial Health</span>
+      <span className="font-semibold text-white">
+        {underwriting.financialHealthScore} / 40
+      </span>
+    </div>
+
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Market</span>
+      <span className="font-semibold text-white">
+        {underwriting.marketScore} / 25
+      </span>
+    </div>
+
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Property Quality</span>
+      <span className="font-semibold text-white">
+        {underwriting.propertyQualityScore} / 20
+      </span>
+    </div>
+
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Risk</span>
+      <span className="font-semibold text-white">
+        {underwriting.riskScore} / 15
+      </span>
+    </div>
+
+  </div>
+</div>
 <div className="mt-6 space-y-4">
   <div>
     <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">
